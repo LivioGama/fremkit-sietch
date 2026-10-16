@@ -1,0 +1,35 @@
+{
+  "id": "mac-temperatures",
+  "name": {
+    "fr": "Temp\u00e9ratures du Mac",
+    "en": "Mac temperatures"
+  },
+  "version": "1.0.0",
+  "sdk": 1,
+  "author": "FlorianBruniaux",
+  "license": "MIT",
+  "description": {
+    "fr": "Température CPU mesurée par macmon ou par le système",
+    "en": "CPU temperature measured by macmon or the system"
+  },
+  "category": "system",
+  "icon": "thermometer",
+  "minSize": [
+    8,
+    4
+  ],
+  "defaultSize": [
+    16,
+    6
+  ],
+  "compact": {
+    "width": 5
+  },
+  "subscriptions": [
+    "system"
+  ],
+  "commands": [],
+  "permissions": {
+    "network": []
+  }
+}
