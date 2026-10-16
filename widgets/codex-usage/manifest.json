@@ -1,0 +1,35 @@
+{
+  "id": "codex-usage",
+  "name": {
+    "fr": "Usage Codex",
+    "en": "Codex usage"
+  },
+  "version": "1.0.0",
+  "sdk": 1,
+  "author": "FlorianBruniaux",
+  "license": "MIT",
+  "description": {
+    "fr": "Quotas et usage du compte, valeurs inconnues explicites",
+    "en": "Account quotas and usage, with explicit unknown values"
+  },
+  "category": "ai",
+  "icon": "chart-no-axes-column",
+  "minSize": [
+    12,
+    6
+  ],
+  "defaultSize": [
+    20,
+    12
+  ],
+  "compact": {
+    "width": 7
+  },
+  "subscriptions": [
+    "codex"
+  ],
+  "commands": [],
+  "permissions": {
+    "network": []
+  }
+}
