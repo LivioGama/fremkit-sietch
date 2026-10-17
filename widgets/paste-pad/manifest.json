@@ -1,0 +1,73 @@
+{
+  "id": "paste-pad",
+  "name": {
+    "fr": "Pavé de collage",
+    "en": "Paste pad"
+  },
+  "version": "1.0.0",
+  "sdk": 1,
+  "author": "LivioGama",
+  "license": "MIT",
+  "description": {
+    "fr": "Des boutons qui collent une valeur enregistrée dans le champ qui avait le focus, avec retour à la ligne facultatif.",
+    "en": "Buttons that paste a saved value into the field that had focus, with an optional Return."
+  },
+  "category": "productivity",
+  "icon": "clipboard",
+  "minSize": [
+    8,
+    4
+  ],
+  "defaultSize": [
+    16,
+    6
+  ],
+  "commands": [
+    "paste-pad"
+  ],
+  "settingsSchema": {
+    "buttons": {
+      "type": "list",
+      "default": [],
+      "max": 24,
+      "label": {
+        "fr": "Boutons",
+        "en": "Buttons"
+      },
+      "itemSchema": {
+        "label": {
+          "type": "string",
+          "default": "",
+          "label": {
+            "fr": "Libellé (le texte collé s’il est vide)",
+            "en": "Label (the pasted text when empty)"
+          }
+        },
+        "value": {
+          "type": "string",
+          "default": "",
+          "label": {
+            "fr": "Valeur à coller",
+            "en": "Value to paste"
+          }
+        },
+        "enter": {
+          "type": "boolean",
+          "default": false,
+          "label": {
+            "fr": "Appuyer sur Entrée après",
+            "en": "Press Return after"
+          }
+        }
+      }
+    },
+    "columns": {
+      "type": "number",
+      "default": 4,
+      "label": {
+        "fr": "Colonnes",
+        "en": "Columns"
+      }
+    }
+  }
+}

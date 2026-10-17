@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Paste pad</title>
+<style>
+  html,body{margin:0;height:100%;background:transparent;color:var(--text, #e6e8eb);font-family:var(--font, -apple-system,system-ui,sans-serif);overflow:hidden}
+  .wrap{box-sizing:border-box;height:100%;padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+  html.on-light body{color:var(--on-surface,#0b0d10)}
+  .note{font-size:calc(13px * var(--text-scale, 1));color:var(--text-muted, #8b93a0);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  html.on-light .note{color:var(--on-surface,#0b0d10);opacity:.75}
+  [hidden]{display:none!important}
+</style>
+<style>
+  .grid{flex:1;min-height:0;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;
+    display:grid;grid-template-columns:repeat(var(--cols,4),1fr);gap:10px;
+    grid-auto-rows:minmax(var(--btn,64px),1fr)}
+  /* A finger-sized button, the label centred and a small ↵ when Return follows the paste. */
+  .btn{box-sizing:border-box;position:relative;font:inherit;border:0;border-radius:14px;min-height:var(--btn,64px);
+    padding:10px 12px;background:rgba(128,128,128,.18);color:inherit;display:flex;align-items:center;
+    justify-content:center;text-align:center;cursor:pointer;overflow:hidden}
+  .btn .label{max-width:100%;font-size:calc(15px * var(--text-scale, 1));font-weight:600;line-height:1.25;
+    overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .btn .send{position:absolute;top:6px;right:8px;font-size:calc(12px * var(--text-scale, 1));font-weight:600;
+    color:var(--text-muted, #8b93a0);opacity:.85}
+  html.on-light .btn .send{color:var(--on-surface,#0b0d10);opacity:.6}
+  .btn:active{background:rgba(128,128,128,.32)}
+  .btn.ok{background:rgba(52,152,86,.38)}
+  .btn.failed{background:rgba(179,38,30,.42)}
+  .btn.ok .send,.btn.failed .send{color:currentColor;opacity:1;font-size:calc(15px * var(--text-scale, 1))}
+  html.tight .btn{padding:6px 10px}
+</style></head>
+<body><div class="wrap">
+  <div class="grid" id="grid"></div>
+  <div class="note" id="empty" hidden></div>
+</div>
+<script>
+  var L = {
+    empty: { fr: 'Ajoutez des boutons dans les réglages du widget', en: 'Add buttons in the widget settings' },
+    return: { fr: 'Entrée est enfoncée après le collage', en: 'Return is pressed after the paste' }
+  }
+  /** How long a button keeps its ✓ or ✗. */
+  var FEEDBACK_MS = 1400
+
+  var grid = document.getElementById('grid')
+  var empty = document.getElementById('empty')
+  var settings = {}
+  /** button index -> 'ok' | 'failed', cleared by a timer. */
+  var feedback = {}
+  /** button index -> the host's sentence, shown as the button's title after a failure. */
+  var messages = {}
+
+  /**
+   * A row the admin is still half-typing has no value, and is skipped rather than drawn as a
+   * button that would paste nothing. The label falls back to the value's first line.
+   */
+  function spec(saved) {
+    if (!saved || typeof saved !== 'object') return null
+    var value = typeof saved.value === 'string' ? saved.value : ''
+    if (!value.trim()) return null
+    var label = typeof saved.label === 'string' ? saved.label.trim() : ''
+    if (!label) label = value.split('\n')[0].trim()
+    if (label.length > 40) label = label.slice(0, 39) + '…'
+    return { label: label, enter: saved.enter === true }
+  }
+
+  function render() {
+    var list = (Array.isArray(settings.buttons) ? settings.buttons : []).map(spec).filter(Boolean)
+    var cols = Math.max(1, Math.min(12, Math.round(Number(settings.columns)) || 4))
+    grid.style.setProperty('--cols', String(cols))
+    grid.textContent = ''
+    grid.hidden = list.length === 0
+    empty.hidden = list.length > 0
+    if (!list.length) {
+      empty.textContent = Fremkit.t(L.empty)
+      return
+    }
+    list.forEach(function (entry, index) {
+      var state = feedback[index]
+      var button = Fremkit.el('button', 'btn' + (state ? ' ' + state : ''))
+      button.type = 'button'
+      button.appendChild(Fremkit.el('span', 'label', entry.label))
+      if (entry.enter) {
+        var badge = Fremkit.el('span', 'send', state === 'ok' ? '✓' : state === 'failed' ? '✗' : '↵')
+        badge.title = Fremkit.t(L.return)
+        button.appendChild(badge)
+      }
+      if (messages[index]) button.title = messages[index]
+      button.addEventListener('click', function () { press(index) })
+      grid.appendChild(button)
+    })
+  }
+
+  function press(index) {
+    // The index only: the host reads the value and the Return flag from this instance's saved
+    // settings, so a widget cannot paste something the user never wrote.
+    Promise.resolve(Fremkit.sendCommand('paste-pad', 'paste', { instanceId: Fremkit.instanceId, index: index }))
+      .then(function (result) {
+        if (result && result.ok) { mark(index, 'ok', '') }
+        else { mark(index, 'failed', result && result.error ? String(result.error) : '') }
+      })
+      .catch(function () { mark(index, 'failed', '') })
+  }
+
+  function mark(index, state, message) {
+    feedback[index] = state
+    messages[index] = message
+    render()
+    setTimeout(function () {
+      if (feedback[index] !== state) return
+      delete feedback[index]
+      delete messages[index]
+      render()
+    }, FEEDBACK_MS)
+  }
+
+  Fremkit.whenReady(function () {
+    document.documentElement.lang = Fremkit.locale
+    settings = Fremkit.settings || {}
+    Fremkit.onLocale(render)
+    Fremkit.onSettings(function (next) { settings = next || {}; feedback = {}; messages = {}; render() })
+    render()
+  })
+</script>
+</body>
+</html>
