@@ -37,6 +37,8 @@ jobs:
 
       - run: bun run typecheck
 
+      - run: bun run lint
+
       - run: bun run test
 
       # The vendored manifest schema must be the one Fremkit released, or this registry

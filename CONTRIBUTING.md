@@ -78,6 +78,7 @@ request that passes here an install that works there.
 
 ```bash
 bun install
+bun run lint
 bun run validate
 ```
 

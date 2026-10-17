@@ -61,10 +61,14 @@ The `index.json` and `dist/` are generated: never edit them by hand, never commi
 ```bash
 bun install
 bun run test          # the validator, the packer and the index builder
+bun run lint          # oxlint, through Vite+
 bun run validate      # every rule, nothing written — what a pull request runs
 bun run build         # the same, plus dist/index.json, dist/widgets/*.zip and dist/index.html
 bun run check-vendor  # the vendored schema is still Fremkit's
 ```
+
+The tests and the linter run through Vite+ (`vp test`, `vp lint`) and the typecheck uses
+TypeScript 7.
 
 `bun run validate` and `bun run build` read the index currently on Pages, so a version that does not go
 up is refused before merge, and older releases stay downloadable for a rollback.
