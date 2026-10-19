@@ -4,7 +4,8 @@ This widget checks incoming Messages from the last five minutes only after a per
 button. It recognizes a code only when nearby text identifies it as a verification, security,
 authentication, passcode, sign-in, or French verification code. The code is copied to the clipboard
 without being returned to the widget or displayed. A “Copied” confirmation clears after 30 seconds.
-The clipboard keeps the code until something replaces it.
+Fremkit schedules a best-effort cleanup after one minute. It clears the clipboard only if its
+contents have not changed; if macOS refuses cleanup, the code may remain until replaced.
 
 The helper reads the Messages database in read-only mode. Message text and codes are held only in
 memory for the request; there is no polling, history, logging, or network request. The widget asks

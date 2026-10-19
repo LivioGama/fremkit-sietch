@@ -1,9 +1,9 @@
 {
   "id": "messages-2fa",
   "name": { "fr": "Code 2FA", "en": "2FA Code" },
-  "version": "1.0.2",
+  "version": "1.0.3",
   "sdk": 1,
-  "author": "usul",
+  "author": "LivioGama",
   "license": "MIT",
   "homepage": "https://github.com/LivioGama/fremkit-sietch",
   "description": {

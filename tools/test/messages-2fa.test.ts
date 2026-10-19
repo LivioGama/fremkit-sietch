@@ -31,7 +31,7 @@ describe('Messages 2FA widget', () => {
     await new Promise(resolve => setTimeout(resolve, 0))
 
     expect(elements.copy.textContent).toBe('Copied')
-    expect(elements.status.textContent).toBe('Code copied. It stays on the clipboard until replaced.')
+    expect(elements.status.textContent).toBe('Code copied. Clipboard cleanup is scheduled in one minute.')
     expect(elements).not.toHaveProperty('code')
     expect(html).not.toContain('result.code')
   })

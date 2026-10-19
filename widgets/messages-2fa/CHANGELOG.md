@@ -1,3 +1,8 @@
+## 1.0.3 — 2026-10-19
+
+### Changed
+- Say that clipboard cleanup is scheduled after one minute.
+
 ## 1.0.2 — 2026-10-19
 
 ### Changed
