@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { color-scheme: dark; font: 14px/1.35 system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px; color: var(--on-surface, #e6e8eb); background: transparent; }
+    #coverage { color: var(--text-muted, #9ba3ad); font-size: 11px; margin-bottom: 8px; }
+    #status { color: var(--text-muted, #9ba3ad); margin: 8px 0; }
+    #list { display: grid; gap: 6px; }
+    .project { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 7px 9px; border: 1px solid color-mix(in srgb, var(--on-surface, #e6e8eb) 14%, transparent); border-radius: 8px; }
+    .meta { flex: 1; min-width: 0; }
+    .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+    .path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted, #9ba3ad); font: 10px/1.3 ui-monospace, monospace; }
+    .open { min-height: 34px; padding: 0 11px; border: 0; border-radius: 6px; color: var(--on-accent, #151515); background: var(--accent, #d9b36a); font: inherit; font-weight: 650; cursor: pointer; }
+    .open:disabled { opacity: .55; cursor: default; }
+    .error { color: var(--danger, #ff7777) !important; }
+    @media (max-width: 460px) { body { padding: 8px; } .project { gap: 6px; padding: 6px; } .open { padding: 0 7px; } }
+  </style>
+</head>
+<body>
+  <div id="coverage"></div>
+  <div id="status" role="status" aria-live="polite"></div>
+  <div id="list"></div>
+  <script>
+    (function () {
+      'use strict'
+      var L = {
+        coverage: { en: 'Herdr folders only · observed since {date}', fr: 'Dossiers Herdr uniquement · observés depuis le {date}' },
+        loading: { en: 'Looking for Herdr working folders…', fr: 'Recherche des dossiers de travail Herdr…' },
+        empty: { en: 'No working folders observed yet.', fr: 'Aucun dossier de travail observé pour le moment.' },
+        open: { en: 'Open', fr: 'Ouvrir' },
+        opening: { en: 'Opening…', fr: 'Ouverture…' },
+        failed: { en: 'Could not open that working folder.', fr: 'Impossible d’ouvrir ce dossier de travail.' },
+        unavailable: { en: 'Herdr is unavailable. Start Herdr to collect folder history.', fr: 'Herdr est indisponible. Lancez Herdr pour recueillir l’historique des dossiers.' }
+      }
+      var projects = [], sourceError = null, opened = false, historyStartsAt = null
+      var coverage = document.getElementById('coverage')
+      var status = document.getElementById('status')
+      var list = document.getElementById('list')
+      function t(key, params) { return Fremkit.t(L[key], params) }
+      function setStatus(message, error) {
+        status.textContent = message
+        status.className = error ? 'error' : ''
+      }
+      function render() {
+        var since = historyStartsAt ? new Date(historyStartsAt).toLocaleDateString() : '—'
+        coverage.textContent = t('coverage', { date: since })
+        list.replaceChildren()
+        if (sourceError) setStatus(t('unavailable'), true)
+        if (!projects.length) {
+          if (!sourceError) setStatus(opened ? t('empty') : t('loading'), false)
+          return
+        }
+        if (!sourceError) setStatus('', false)
+        projects.forEach(function (project) {
+          var row = document.createElement('div')
+          row.className = 'project'
+          var meta = document.createElement('div')
+          meta.className = 'meta'
+          var name = document.createElement('div')
+          name.className = 'name'
+          name.textContent = project.name || project.path
+          var path = document.createElement('div')
+          path.className = 'path'
+          path.textContent = project.path
+          meta.append(name, path)
+          var button = document.createElement('button')
+          button.className = 'open'
+          button.type = 'button'
+          button.textContent = t('open')
+          button.setAttribute('aria-label', t('open') + ' ' + (project.name || project.path))
+          button.addEventListener('click', function () { openProject(project, button) })
+          row.append(meta, button)
+          list.append(row)
+        })
+      }
+      function openProject(project, button) {
+        var settings = Fremkit.settings || {}
+        var target = settings.target || 'herdr'
+        button.disabled = true
+        button.textContent = t('opening')
+        setStatus('', false)
+        Promise.resolve(Fremkit.sendCommand('recent-projects', 'open', {
+          path: project.path,
+          target: target,
+          customCommand: settings.customCommand || ''
+        })).then(function (result) {
+          if (!result || result.ok !== true) throw new Error('open failed')
+          button.disabled = false
+          button.textContent = t('open')
+        }).catch(function () {
+          button.disabled = false
+          button.textContent = t('open')
+          setStatus(t('failed'), true)
+        })
+      }
+      Fremkit.subscribe('recent-projects', function (snapshot) {
+        opened = true
+        projects = snapshot && Array.isArray(snapshot.projects) ? snapshot.projects.slice(0, 50) : []
+        historyStartsAt = snapshot && Number.isFinite(snapshot.historyStartsAt) ? snapshot.historyStartsAt : null
+        sourceError = snapshot && snapshot.error ? snapshot.error : null
+        render()
+      })
+      Fremkit.onLocale(render)
+      Fremkit.whenReady(render)
+    })()
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "id": "recent-projects",
+  "name": { "fr": "Projets récents", "en": "Recent projects" },
+  "version": "1.0.0",
+  "sdk": 1,
+  "author": "Livio Gama",
+  "license": "MIT",
+  "description": {
+    "fr": "Retrouvez les dossiers de travail vus dans les panneaux Herdr et ouvrez-en un dans un nouveau panneau.",
+    "en": "Return to working folders seen in Herdr panes and open one in a new pane."
+  },
+  "category": "productivity",
+  "icon": "folder-clock",
+  "minSize": [8, 4],
+  "defaultSize": [16, 8],
+  "subscriptions": ["recent-projects"],
+  "commands": ["recent-projects"],
+  "permissions": { "network": [] },
+  "settingsSchema": {
+    "target": {
+      "type": "enum",
+      "default": "herdr",
+      "label": { "fr": "Ouvrir avec", "en": "Open with" },
+      "options": [
+        { "value": "herdr", "label": { "fr": "Nouveau panneau Herdr", "en": "New Herdr pane" } },
+        { "value": "claude", "label": { "fr": "Claude Code", "en": "Claude Code" } },
+        { "value": "codex", "label": { "fr": "Codex", "en": "Codex" } },
+        { "value": "custom", "label": { "fr": "Cible personnalisée", "en": "Custom target" } }
+      ]
+    },
+    "customCommand": {
+      "type": "string",
+      "default": "",
+      "label": {
+        "fr": "Exécutable personnalisé (un seul nom, sans arguments)",
+        "en": "Custom executable (one name, no arguments)"
+      }
+    }
+  }
+}
