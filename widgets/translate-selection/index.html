@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Translate Selection</title>
+<style>
+  html,body{margin:0;height:100%;background:transparent;color:var(--text,#e6e8eb);font-family:var(--font,-apple-system,system-ui,sans-serif);overflow:hidden}
+  .wrap{box-sizing:border-box;height:100%;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+  .note,.status{font-size:calc(12px * var(--text-scale,1));line-height:1.4;color:var(--text-muted,#8b93a0)}
+  .actions{display:flex;align-items:center;gap:10px;flex:none}
+  button{min-height:44px;border:0;border-radius:10px;padding:8px 14px;background:var(--accent,#d9b36a);color:var(--surface,#101318);font:inherit;font-weight:600;cursor:pointer}
+  button:focus-visible{outline:2px solid var(--text,#e6e8eb);outline-offset:2px}button:disabled{opacity:.55;cursor:wait}
+  .status{overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}.status.error{color:var(--danger,#d9463f)}[hidden]{display:none!important}
+  html.on-light body{color:var(--on-surface,#0b0d10)}html.on-light .note,html.on-light .status{color:var(--on-surface,#0b0d10);opacity:.78}
+</style></head><body><main class="wrap">
+  <div class="note" id="note"></div>
+  <div class="actions"><button type="button" id="translate"></button></div>
+  <div class="status" id="status" aria-live="polite"></div>
+</main><script>
+  var L = {
+    disclosure: { fr: 'Sélectionnez du texte dans l’application au premier plan. Après un clic, seul le texte sélectionné est envoyé au fournisseur IA de la connexion. Le presse-papiers reste intact.', en: 'Select text in the foreground app. After you click, only the selected text is sent to the connection’s AI provider. Your clipboard stays unchanged.' },
+    action: { fr: 'Traduire la sélection', en: 'Translate selection' },
+    connection: { fr: 'Choisissez une connexion IA.', en: 'Choose an AI connection.' },
+    favorites: { fr: 'Choisissez exactement deux langues favorites dans les paramètres.', en: 'Choose exactly two favorite languages in settings.' },
+    working: { fr: 'Traduction…', en: 'Translating…' },
+    empty: { fr: 'Aucun texte sélectionné dans l’application au premier plan.', en: 'No text is selected in the foreground app.' },
+    secure: { fr: 'La traduction est désactivée dans les champs sécurisés.', en: 'Translation is disabled in secure fields.' },
+    permission: { fr: 'La lecture de sélection nécessite l’autorisation Accessibilité existante.', en: 'Reading selections requires the existing Accessibility permission.' },
+    long: { fr: 'Texte trop long (2 048 octets maximum).', en: 'Text is too long (2,048 bytes maximum).' },
+    noMatch: { fr: 'La langue détectée ne correspond à aucune des deux favorites.', en: 'Detected language does not match either favorite.' },
+    unavailable: { fr: 'Le fournisseur IA est injoignable.', en: 'The AI provider is unavailable.' },
+    unauthorized: { fr: 'Clé API refusée.', en: 'API key refused.' },
+    rateLimited: { fr: 'Quota atteint.', en: 'Rate limit reached.' },
+    generic: { fr: 'Vérifiez la connexion et réessayez.', en: 'Check the connection and try again.' },
+    unconfigured: { fr: 'Connexion IA incomplète.', en: 'AI connection is incomplete.' },
+    selectionUnavailable: { fr: 'Lecture de la sélection impossible.', en: 'Could not read the selection.' }
+  }
+  var channel = null, favorites = [], running = false
+  function show(value, error) {
+    var status = document.getElementById('status')
+    status.textContent = value
+    status.className = 'status' + (error ? ' error' : '')
+  }
+  function applySettings(settings) {
+    channel = settings.connection ? 'openai-shellsmith:' + settings.connection : null
+    favorites = Array.isArray(settings.favorites) ? settings.favorites.slice(0, 2) : []
+    document.getElementById('note').textContent = Fremkit.t(L.disclosure)
+    document.getElementById('translate').textContent = Fremkit.t(L.action)
+    if (!channel) show(Fremkit.t(L.connection), true)
+    else if (favorites.length !== 2) show(Fremkit.t(L.favorites), true)
+    else show('', false)
+  }
+  Fremkit.whenReady(function () {
+    document.documentElement.lang = Fremkit.locale
+    document.getElementById('translate').addEventListener('click', function () {
+      if (running) return
+      if (!channel) { show(Fremkit.t(L.connection), true); return }
+      if (favorites.length !== 2) { show(Fremkit.t(L.favorites), true); return }
+      running = true
+      var button = document.getElementById('translate')
+      button.disabled = true
+      show(Fremkit.t(L.working), false)
+      Promise.resolve(Fremkit.sendCommand(channel, 'translateSelection', { favorites: favorites }))
+        .then(function (result) {
+          if (result && result.ok && typeof result.text === 'string') {
+            show(result.text, false)
+            return
+          }
+          var key = result && result.error === 'empty-selection' ? 'empty'
+            : result && result.error === 'secure-field' ? 'secure'
+              : result && result.error === 'permission-required' ? 'permission'
+              : result && result.error === 'text-too-long' ? 'long'
+                : result && result.error === 'language-not-favorite' ? 'noMatch'
+                  : result && result.error === 'unauthorized' ? 'unauthorized'
+                    : result && result.error === 'rate-limited' ? 'rateLimited'
+                    : result && result.error === 'unavailable' ? 'unavailable'
+                        : result && result.error === 'unconfigured' ? 'unconfigured'
+                        : result && result.error === 'selection-unavailable' ? 'selectionUnavailable' : 'generic'
+          show(Fremkit.t(L[key]), true)
+        })
+        .catch(function () { show(Fremkit.t(L.generic), true) })
+        .finally(function () { running = false; button.disabled = false })
+    })
+    Fremkit.onLocale(function (locale) { document.documentElement.lang = locale; applySettings(Fremkit.settings || {}) })
+    Fremkit.onSettings(function (settings) { applySettings(settings || {}) })
+    applySettings(Fremkit.settings || {})
+  })
+</script></body></html>

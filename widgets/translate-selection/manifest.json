@@ -1,0 +1,22 @@
+{
+  "id": "translate-selection",
+  "name": { "fr": "Traduire la sélection", "en": "Translate Selection" },
+  "version": "1.2.0",
+  "sdk": 1,
+  "author": "Livio Gama",
+  "license": "MIT",
+  "homepage": "https://github.com/LivioGama/fremkit-sietch",
+  "description": { "fr": "Traduit le texte sélectionné dans l’application au premier plan vers l’autre de vos deux langues favorites.", "en": "Translate text selected in the foreground app into the other of your two favorite languages." },
+  "category": "utility",
+  "icon": "languages",
+  "minSize": [10, 5],
+  "defaultSize": [16, 8],
+  "commands": ["openai-shellsmith:*"],
+  "settingsSchema": {
+    "connection": { "type": "connection", "connectionType": "openai-shellsmith", "label": { "fr": "Connexion IA", "en": "AI connection" } },
+    "favorites": {
+      "type": "pick", "connection": "connection", "source": "languages", "default": ["en", "fr"], "max": 2,
+      "label": { "fr": "Deux langues favorites (obligatoire)", "en": "Two favorite languages (required)" }
+    }
+  }
+}
