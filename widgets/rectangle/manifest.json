@@ -1,7 +1,7 @@
 {
   "id": "rectangle",
   "name": { "fr": "Rectangle", "en": "Rectangle" },
-  "version": "1.2.1",
+  "version": "1.2.2",
   "sdk": 1,
   "author": "usul",
   "license": "MIT",

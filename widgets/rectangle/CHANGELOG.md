@@ -1,3 +1,8 @@
+## 1.2.2 — 2026-10-21
+
+### Changed
+- The Fill screen button shows a filled inner square (▣) instead of a hollow outline (□).
+
 ## 1.2.1 — 2026-10-21
 
 ### Changed
