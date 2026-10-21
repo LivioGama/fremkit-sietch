@@ -1,7 +1,7 @@
 {
   "id": "rectangle",
   "name": { "fr": "Rectangle", "en": "Rectangle" },
-  "version": "1.2.0",
+  "version": "1.2.1",
   "sdk": 1,
   "author": "usul",
   "license": "MIT",
@@ -13,6 +13,6 @@
   "category": "productivity",
   "icon": "move",
   "minSize": [8, 4],
-  "defaultSize": [12, 6],
+  "defaultSize": [10, 8],
   "commands": ["rectangle"]
 }

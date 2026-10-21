@@ -1,3 +1,9 @@
+## 1.2.1 — 2026-10-21
+
+### Changed
+- Prefer a taller, narrower tile by default (10×8 instead of 12×6) so the four action buttons
+  get real touch height.
+
 ## 1.2.0 — 2026-10-21
 
 ### Changed
