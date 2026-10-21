@@ -1,3 +1,9 @@
+## 1.2.0 — 2026-10-21
+
+### Changed
+- Track the focused window automatically: the target refreshes on its own instead of needing a
+  manual Refresh button, and the actions arm themselves as soon as a safe window is frontmost.
+
 ## 1.1.0 — 2026-10-19
 
 ### Changed

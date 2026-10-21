@@ -18,15 +18,13 @@
     .status{flex:0 0 auto;min-height:1.2em;margin:0 8px 7px;text-align:center;font-size:calc(11px * var(--text-scale,1));opacity:.75;pointer-events:none}
     .target{display:flex;align-items:center;justify-content:center;gap:7px;min-height:28px;margin:4px 8px 0;font-size:calc(11px * var(--text-scale,1));opacity:.8}
     .target-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
-    .refresh{border:0;border-radius:7px;background:var(--surface-3,#252a32);color:inherit;font:inherit;padding:4px 8px;cursor:pointer}
-    .refresh:disabled{opacity:.55}
     html.on-light body{color:var(--on-surface,#0b0d10)}
     html.on-light button{background:rgba(128,128,128,.2)}
     html.accent-fill button{background:rgba(0,0,0,.18)}
   </style>
 </head>
 <body>
-  <div class="target"><span id="target-label">No target selected</span><span id="target-name" class="target-name"></span><button class="refresh" id="refresh" type="button">Refresh</button></div>
+  <div class="target"><span id="target-label"></span><span id="target-name" class="target-name"></span></div>
   <main class="grid" id="grid"></main>
   <div class="status" id="status" aria-live="polite"></div>
   <script>
@@ -38,12 +36,12 @@
     ]
     var TEXT = {
       selected: { fr: 'Fenêtre cible :', en: 'Target window:' },
-      noTarget: { fr: 'Aucune fenêtre cible sûre. Activez une fenêtre et actualisez.', en: 'No safe target window. Activate a window and refresh.' },
+      noTarget: { fr: 'Activez une fenêtre pour la contrôler', en: 'Focus a window to control it' },
       sent: { fr: 'Géométrie vérifiée par macOS.', en: 'macOS verified the window geometry.' },
       unavailable: { fr: 'Action refusée ou indisponible.', en: 'Action was refused or is unavailable.' },
       permission: { fr: 'Autorisez Fremkit dans Réglages Système > Confidentialité et sécurité > Accessibilité.', en: 'Allow Fremkit in System Settings > Privacy & Security > Accessibility.' },
       noDisplay: { fr: 'Aucun autre écran n’est connecté.', en: 'No other display is connected.' },
-      targetChanged: { fr: 'La fenêtre cible a changé. Actualisez avant de réessayer.', en: 'The target window changed. Refresh before trying again.' }
+      targetChanged: { fr: 'La fenêtre cible a changé.', en: 'The target window changed.' }
     }
 
     Fremkit.whenReady(function () {
@@ -51,33 +49,43 @@
       var status = document.getElementById('status')
       var targetLabel = document.getElementById('target-label')
       var targetName = document.getElementById('target-name')
-      var refresh = document.getElementById('refresh')
       var targetToken = ''
       var timer = 0
+      var pollTimer = 0
 
       function setButtonsEnabled(enabled) {
         grid.querySelectorAll('button').forEach(function (button) { button.disabled = !enabled })
       }
 
-      function refreshTarget() {
-        refresh.disabled = true
-        targetToken = ''
-        setButtonsEnabled(false)
-        targetLabel.textContent = ''
-        targetName.textContent = ''
+      function schedule(ms) {
+        clearTimeout(pollTimer)
+        pollTimer = setTimeout(poll, ms)
+      }
+
+      // The strip never takes focus, so the frontmost app is always the one the user is in —
+      // keep its inspected token current and the buttons arm themselves.
+      function poll() {
+        if (document.hidden) { schedule(3000); return }
         Fremkit.sendCommand('rectangle', 'inspect-target', {}).then(function (result) {
-          if (!result || result.ok !== true || !result.target || !result.target.token) {
-            targetLabel.textContent = Fremkit.t(TEXT.noTarget)
+          if (result && result.ok === true && result.target && result.target.token) {
+            targetToken = result.target.token
+            targetLabel.textContent = Fremkit.t(TEXT.selected)
+            targetName.textContent = result.target.application
+            targetName.title = result.target.application
+            setButtonsEnabled(true)
+            schedule(1200)
             return
           }
-          targetToken = result.target.token
-          targetLabel.textContent = Fremkit.t(TEXT.selected)
-          targetName.textContent = result.target.application
-          targetName.title = result.target.application
-          setButtonsEnabled(true)
-        }).catch(function () {
+          targetToken = ''
           targetLabel.textContent = Fremkit.t(TEXT.noTarget)
-        }).finally(function () { refresh.disabled = false })
+          targetName.textContent = ''
+          setButtonsEnabled(false)
+          schedule(2000)
+        }).catch(function () {
+          targetToken = ''
+          setButtonsEnabled(false)
+          schedule(4000)
+        })
       }
 
       function flash(el, ok) {
@@ -113,12 +121,12 @@
             flash(button, false)
             status.textContent = Fremkit.t(TEXT.unavailable)
             timer = setTimeout(function () { status.textContent = '' }, 1800)
-          }).finally(function () { refreshTarget() })
+          }).finally(function () { poll() })
         })
         grid.appendChild(button)
       })
-      refresh.addEventListener('click', refreshTarget)
-      refreshTarget()
+      document.addEventListener('visibilitychange', function () { if (!document.hidden) poll() })
+      poll()
     })
   </script>
 </body>
