@@ -1,3 +1,9 @@
+## 1.0.4 — 2026-10-21
+
+### Fixed
+- Show the host's own error wording for unrecognized failures — including a missing Full Disk
+  Access grant — instead of the generic read-failure text.
+
 ## 1.0.3 — 2026-10-19
 
 ### Changed

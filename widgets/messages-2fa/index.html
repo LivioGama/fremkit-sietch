@@ -56,10 +56,11 @@
             }, 30000)
             return
           }
-          var message = result && result.error === 'Available only from this Mac.' ? TEXT.localOnly
-            : result && result.error === 'No recent verification code found.' ? TEXT.missing
-            : result && result.error === 'The code could not be copied.' ? TEXT.copyFailed : TEXT.unavailable
-          status.textContent = Fremkit.t(message)
+          var message = result && result.error === 'Available only from this Mac.' ? Fremkit.t(TEXT.localOnly)
+            : result && result.error === 'No recent verification code found.' ? Fremkit.t(TEXT.missing)
+            : result && result.error === 'The code could not be copied.' ? Fremkit.t(TEXT.copyFailed)
+            : result && result.error ? result.error : Fremkit.t(TEXT.unavailable)
+          status.textContent = message
           button.textContent = Fremkit.t(TEXT.button)
         }).catch(function () {
           status.textContent = Fremkit.t(TEXT.unavailable)
